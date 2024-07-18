@@ -8,12 +8,18 @@ export const Record = () => {
         <p className="display-6 mb-3">Historial vacío</p>
       ) : (
         <>
-          {series.map((num, index) => (
-            <p key={index} className="lead mb-2">{num} </p>
-          ))}
+          <div className="card">
+            <div className="card-header">Historial Fibonacci</div>
+            <ul className="list-group list-group-flush">
+              {series.map((num, index) => (
+                <li key={index} className="list-group-item">
+                  {num.join(', ')}{" "}
+                </li>
+              ))}
+            </ul>
+          </div>
         </>
       )}
     </div>
   );
 };
-

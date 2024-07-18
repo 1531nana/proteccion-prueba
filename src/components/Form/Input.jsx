@@ -6,25 +6,26 @@ export const ClockForm = ({ onSubmitValid }) => {
   const [seconds, setSeconds] = useState("");
   const [errors, setErrors] = useState({});
 
+  // validate possible errors
   const validateInputs = () => {
     const errors = {};
     if (hours < 0 || hours > 23) {
-      errors.hours = "Hours must be between 0 and 23";
+      errors.hours = "La hora debe ser entre 0 y 23";
     }
     if (minutes < 0 || minutes > 59) {
-      errors.minutes = "Minutes must be between 0 and 59";
+      errors.minutes = "Los minutos deben ser entre 0 and 59";
     }
     if (seconds < 0 || seconds > 59) {
-      errors.seconds = "Seconds must be between 0 and 59";
+      errors.seconds = "Los segundos deben ser entre 0 and 59";
     }
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
+  // Process the valid input data here
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateInputs()) {
-      // Process the valid input data here
       if (onSubmitValid) {
         onSubmitValid({ hours, minutes, seconds });
       }
@@ -49,7 +50,8 @@ export const ClockForm = ({ onSubmitValid }) => {
           className="form-control"
         />
         {errors.hours && <span className="text-danger">{errors.hours}</span>}
-      </div>:
+      </div>
+      :
       <div className="mb-3">
         <label htmlFor="minutes" className="form-label">
           Minutos:

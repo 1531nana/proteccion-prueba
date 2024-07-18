@@ -9,13 +9,12 @@ const TimeFetcher = ({ onSubmitValid }) => {
     const minutes = date.getMinutes().toString().padStart(2, "0");
     const seconds = date.getSeconds().toString().padStart(2, "0");
 
-    // Formatea la hora como una cadena en formato HH:MM:SS
+    // Formated hour HH:MM:SS
     const formatedHour = `${hours}:${minutes}:${seconds}`;
 
-    // Actualiza el estado con la hora formateada
+    // Update state
     setActualHour(formatedHour);
 
-    // Si existe una función onSubmitValid, llama a esta con los valores de horas, minutos y segundos
     if (onSubmitValid) {
       onSubmitValid({ hours, minutes, seconds });
     }
