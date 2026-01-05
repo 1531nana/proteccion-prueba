@@ -66,12 +66,12 @@ PageSpeed Insights es una herramienta que analiza una URL y genera un reporte ba
 
 PSI/Lighthouse evalúan las siguientes áreas:
 
-- **Performance**: velocidad de carga y respuesta.
-- **Accessibility**: buenas prácticas básicas de accesibilidad.
-- **Best Practices**: calidad técnica y seguridad.
-- **SEO**: señales básicas de indexabilidad.
-  <img width="701" height="179" alt="image" src="https://github.com/user-attachments/assets/634cc59f-ddd9-4a46-be79-c47f56e9515b" />
+- **Performance (Performance)**: velocidad de carga y respuesta.
+- **Accessibility (Accesibilidad)**: buenas prácticas básicas de accesibilidad.
+- **Best Practices (Prácticas recomendadas)**: calidad técnica y seguridad.
+- **SEO (SEO)**: señales básicas de indexabilidad.
 
+<img width="701" height="179" alt="image" src="https://github.com/user-attachments/assets/634cc59f-ddd9-4a46-be79-c47f56e9515b" />
 
 ---
 
@@ -139,32 +139,109 @@ Ejemplo: En este caso se puede evidenciar que el resultado es de 0.7 s, por lo q
 
 
 ---
-
 ## 9. Interpretación de Resultados
 
-### LCP alto
-- Recursos principales pesados.
-- CSS o JS bloqueante.
-- Problemas de carga inicial o servidor.
-
-### INP alto
-- Manejo ineficiente de eventos.
-- Tareas largas en el hilo principal.
-- Scripts de terceros.
-
-### CLS alto
-- Imágenes sin dimensiones definidas.
-- Contenido inyectado dinámicamente.
-- Fuentes web que alteran el layout.
-
-### TBT alto
-- Exceso de JavaScript.
-- Falta de división de código (code splitting).
-- Procesos síncronos largos.
+> Esta sección ayuda a traducir métricas (PSI/Lighthouse) en posibles causas y líneas de acción.
+> Importante: **Field data (usuarios reales)** y **Lab data (laboratorio)** pueden diferir; usa Lab para diagnosticar y Field para priorizar por impacto real.
 
 ---
 
-## Diagnostica problemas de rendimiento (sección PSI / Lighthouse)
+### LCP alto (Largest Contentful Paint)
+**¿Qué indica?**  
+El contenido principal (el elemento más grande visible) tarda en aparecer. El usuario siente que “la página no carga”.
+
+**Causas comunes**
+- Recursos principales pesados (imagen/hero, carrusel, banners).
+- CSS o JS bloqueante que retrasa el render.
+- Render tardío del contenido principal por dependencia de JS.
+- TTFB alto o demasiadas redirecciones (cuando el servidor tarda en responder).
+
+**Acciones típicas**
+- Optimizar y priorizar el recurso “hero” (peso, formato, dimensiones, preload cuando aplique).
+- Reducir bloqueo de render: CSS crítico, diferir JS no esencial, dividir bundles.
+- Minimizar dependencias de red antes de pintar el contenido principal.
+
+---
+
+### INP alto (Interaction to Next Paint)
+**¿Qué indica?**  
+La interfaz responde lento cuando el usuario interactúa (clic, tap, teclado).
+
+**Causas comunes**
+- Manejo ineficiente de eventos (handlers pesados).
+- Tareas largas en el hilo principal.
+- Scripts de terceros que bloquean o consumen CPU.
+- Renderizaciones innecesarias (re-renders costosos).
+
+**Acciones típicas**
+- Optimizar handlers, debouncing/throttling donde aplique.
+- Dividir tareas largas, reducir trabajo en main thread.
+- Revisar third parties, lazy-load, y reducir JS total.
+
+---
+
+### CLS alto (Cumulative Layout Shift)
+**¿Qué indica?**  
+Saltos inesperados de contenido (inestabilidad visual). Afecta lectura, clics y percepción de calidad.
+
+**Causas comunes**
+- Imágenes/iframes sin dimensiones (width/height) o sin espacio reservado.
+- Contenido inyectado dinámicamente arriba del viewport (banners, avisos).
+- Fuentes web que cambian métricas y “empujan” el layout.
+- Componentes que aparecen tarde sin placeholders.
+
+**Acciones típicas**
+- Definir width/height o reservar espacio con CSS (aspect-ratio).
+- Evitar insertar contenido arriba; si es necesario, reservar espacio.
+- Mejorar estrategia de fuentes (font-display, preload selectivo, fallback coherente).
+
+---
+
+### FCP alto (First Contentful Paint)
+**¿Qué indica?**  
+Tarda en aparecer el **primer contenido visible** (texto, imagen, etc.). El usuario percibe “pantalla en blanco” por más tiempo.
+
+**Causas comunes**
+- CSS/JS bloqueante en el `<head>` que impide pintar.
+- Fuentes o estilos que retrasan el render (FOIT o cargas pesadas).
+- Demasiados recursos críticos (requests iniciales grandes).
+- TTFB alto (respuesta inicial lenta del servidor).
+
+**Acciones típicas**
+- Reducir CSS/JS bloqueante (defer/async en scripts, CSS crítico).
+- Optimizar fuentes (preconnect/preload selectivo, subsets, font-display).
+- Minimizar payload inicial (imágenes/JS/CSS) y mejorar prioridad de recursos críticos.
+- Revisar servidor/CDN/caché si también hay TTFB alto.
+
+---
+
+### TTFB alto (Time to First Byte) *(principalmente Field y también en algunas vistas)*
+**¿Qué indica?**  
+El navegador tarda en recibir el **primer byte** del servidor. Es una señal de latencia inicial: red/servidor/caché.
+
+**Causas comunes**
+- Procesamiento lento en backend (render, queries, servicios externos).
+- Caché insuficiente (sin CDN, sin cache-control adecuado, no cachear HTML cuando aplica).
+- Redirecciones, handshake TLS costoso, DNS lento.
+- Sobrecarga o picos de tráfico en infraestructura.
+
+**Acciones típicas**
+- Implementar/mejorar caché (CDN, cache-control, assets con cache largo + versionado).
+- Reducir redirecciones y optimizar DNS/TLS (preconnect donde aplique).
+- Optimizar backend: reducir tiempos de respuesta, consultas, dependencias externas.
+- Monitorear en APM y correlacionar con picos de tráfico.
+
+---
+
+### Cómo priorizar rápidamente
+1. **TTFB alto** → revisar infraestructura/backend/CDN/caché primero (impacta todo lo demás).
+2. **FCP/LCP altos** con TTFB normal → foco en frontend: recursos críticos, imágenes, CSS/JS bloqueante.
+3. **CLS alto** → foco en estabilidad visual (dimensiones, placeholders, fuentes).
+4. **INP alto** → foco en interacción y performance de ejecución (eventos, main thread, terceros).
+
+---
+
+## Reporte de Lighthouse en datos de laboratorio
 
 Esta sección de PageSpeed Insights (PSI) corresponde al **reporte de Lighthouse en datos de laboratorio (Lab Data)**. Su propósito es **diagnosticar causas técnicas** que afectan el rendimiento (y, por extensión, experiencia de usuario), bajo condiciones simuladas y reproducibles.
 
@@ -192,15 +269,18 @@ PSI presenta puntuaciones (0–100) para cada categoría:
 
 ### 2) Sub-métricas que afectan el score de Rendimiento
 
-Debajo del score de **Rendimiento**, PSI muestra las métricas que componen el puntaje (las más comunes):
+Debajo del score de **Rendimiento (Performance)**, PSI muestra las métricas que componen el puntaje (las más comunes):
 
 - **FCP (First Contentful Paint):** cuándo aparece el **primer contenido visible** (señal de inicio de carga percibida).
 - **LCP (Largest Contentful Paint):** cuándo aparece el **contenido principal** (impacta mucho la percepción de “ya cargó”).
 - **TBT (Total Blocking Time):** cuánto tiempo estuvo el hilo principal “bloqueado” por tareas largas (impacta interactividad).
 - **CLS (Cumulative Layout Shift):** estabilidad visual (si hay “saltos” inesperados de contenido).
 - **SI (Speed Index):** rapidez con la que el contenido se va mostrando visualmente (progreso de carga).
-
+ 
 PSI puede mostrar, junto a cada métrica, un valor tipo **“+N”**, que representa una contribución/penalización relativa (dependiendo del reporte). En la práctica, se usa para identificar **qué métricas están tirando el score hacia abajo** y priorizarlas.
+
+Ejemplo de métricas:  
+<img width="1099" height="816" alt="image" src="https://github.com/user-attachments/assets/50783328-5572-46e8-b19f-0a6393f8640a" />
 
 ---
 
@@ -225,6 +305,10 @@ PSI también muestra información contextual de la ejecución, por ejemplo:
 - **Limitaciones personalizadas** (si aplica)
 - **Emulación** (por ejemplo “escritorio emulado”)
 
+Ejemplo: 
+<img width="1096" height="376" alt="image" src="https://github.com/user-attachments/assets/a14b1036-f39d-42b1-82cd-43ba93885c9f" />
+
+
 **Por qué esto importa**
 - Ayuda a explicar variaciones entre mediciones.
 - Permite reportes más confiables (misma versión, mismas condiciones).
@@ -236,6 +320,9 @@ PSI también muestra información contextual de la ejecución, por ejemplo:
 
 En muchos reportes aparece una tira de capturas (“Screenshot, Screenshot…”) que muestra **cómo se fue pintando la página** en el tiempo.
 
+Ejemplo:
+<img width="1306" height="684" alt="image" src="https://github.com/user-attachments/assets/15c9e2d9-192b-4c80-91d1-a1387cdb68e6" />
+
 ¿Para qué sirve?
 - Identificar “pantallas en blanco” (delay en FCP).
 - Confirmar si el contenido principal tarda demasiado (LCP).
@@ -243,30 +330,14 @@ En muchos reportes aparece una tira de capturas (“Screenshot, Screenshot…”
 
 ---
 
-### 6) “Ver gráfico de rectángulos” (layout shifts / render)
-
-Este recurso ayuda a visualizar de forma más técnica cómo se pintan elementos y/o cómo ocurren ciertos cambios de diseño (especialmente útil cuando hay problemas asociados a CLS o a renderizado del contenido principal).
-
-Se usa más como apoyo de diagnóstico que como un indicador final.
-
----
-
-### 7) Filtros: “Mostrar auditorías relacionadas con: All / FCP / LCP / TBT / CLS”
-
-PSI permite filtrar auditorías para ver rápidamente recomendaciones relacionadas con una métrica específica.
-
-Ejemplos de uso:
-- Si el problema principal es **LCP**, filtrar por **LCP** para ver recomendaciones que afecten el elemento más grande.
-- Si el problema es **TBT**, filtrar por **TBT** para identificar tareas largas, JS excesivo, bloqueos del hilo principal.
-- Si el problema es **CLS**, filtrar por **CLS** para detectar causantes de inestabilidad (dimensiones faltantes, inyecciones tardías, etc.).
-
----
-
-### 8) “Estadísticas” (Oportunidades)
+### 6) “Estadísticas” (Oportunidades)
 
 En “Estadísticas” PSI/Lighthouse lista oportunidades que suelen incluir:
 - Una descripción (qué está pasando)
-- Un **ahorro estimado** (en tiempo o en KiB)
+- Un **ahorro estimado** (en tiempo o en KiB)  
+Ejemplo: 
+<img width="1013" height="801" alt="image" src="https://github.com/user-attachments/assets/728edfee-214b-4451-8059-6f2e18b740b8" />
+
 
 **Cómo interpretarlo**
 - El “ahorro estimado” ayuda a priorizar, pero no es garantía exacta.
@@ -285,7 +356,10 @@ En “Estadísticas” PSI/Lighthouse lista oportunidades que suelen incluir:
 
 ### 9) “Diagnósticos” (hallazgos técnicos complementarios)
 
-Los “Diagnósticos” son alertas y sugerencias que **pueden o no** afectar el score directamente, pero ayudan a mejorar rendimiento, mantenibilidad y estabilidad.
+Los “Diagnósticos” son alertas y sugerencias que **pueden o no** afectar el score directamente, pero ayudan a mejorar rendimiento, mantenibilidad y estabilidad.   
+
+Ejemplo:
+<img width="1131" height="684" alt="image" src="https://github.com/user-attachments/assets/60db96ac-6548-48a7-91a5-d0d1061f7b38" />
 
 Ejemplos típicos:
 - **Reducir JS/CSS no usado:** sugiere optimización de bundles (tree-shaking, code splitting, lazy loading).
@@ -305,6 +379,10 @@ Ejemplos típicos:
 - **Auditorías aprobadas:** controles que el sitio ya cumple (útil para evidenciar “qué está bien”).
 - **No aplicable:** auditorías que no aplican por el tipo de sitio o porque no se detectó el patrón (no es un error).
 
+Ejemplo: 
+
+<img width="1132" height="867" alt="image" src="https://github.com/user-attachments/assets/ec76e023-2017-46d1-9e6d-83c114a3febc" />
+
 Esto es valioso para:
 - Documentar cumplimiento
 - Evitar “perseguir” recomendaciones que no aplican
@@ -312,19 +390,7 @@ Esto es valioso para:
 
 ---
 
-### 11) Recomendación de lectura rápida (método práctico)
-
-Cuando se revisa esta sección, un flujo de lectura eficiente suele ser:
-
-1. Ver **score de Rendimiento** y confirmar cuál métrica está peor (FCP/LCP/TBT/CLS/SI).
-2. Ir a **Métricas** para ver valores y confirmar qué tan lejos está del objetivo.
-3. Revisar **Estadísticas (Oportunidades)** priorizando las de mayor ahorro/impacto.
-4. Revisar **Diagnósticos** para tareas complementarias (estabilidad y salud técnica).
-5. Re-ejecutar tras cambios y documentar **antes/después**.
-
----
-
-## 10. Metodología de Auditoría Recomendada
+## 11. Metodología de Auditoría Recomendada
 
 1. Definir páginas críticas del flujo de usuario.
 2. Ejecutar PageSpeed Insights (mobile y desktop).
@@ -334,32 +400,6 @@ Cuando se revisa esta sección, un flujo de lectura eficiente suele ser:
 6. Priorizar mejoras según impacto.
 7. Implementar cambios.
 8. Re-ejecutar auditoría y documentar resultados.
-
----
-
-## 11. Plantilla de Documentación de Auditoría
-
-- Página / Ruta:
-- Tipo: pública / privada / SPA
-- Entorno:
-- Fecha:
-- Herramienta:
-- Métricas de campo:
-- Métricas de laboratorio:
-- Principales hallazgos:
-- Acciones propuestas:
-- Resultados posteriores:
-- Observaciones:
-
----
-
-## 12. Buenas Prácticas de Implementación
-
-- Definir umbrales mínimos aceptables.
-- Ejecutar auditorías antes de releases.
-- Documentar resultados históricos.
-- Evitar regresiones de rendimiento.
-- Complementar con revisiones manuales de accesibilidad.
 
 ---
 
