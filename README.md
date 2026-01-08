@@ -58,6 +58,8 @@ Establecer una metodología documentada para:
 
 ## 3. Alcance
 
+Este apartado define el alcance de aplicación de esta documentación dentro de Protección, es decir, en qué contextos, proyectos y entornos se adopta el uso de PageSpeed Insights y Lighthouse como herramientas de auditoría.
+
 Aplica a:
 
 - Páginas públicas y privadas (con autenticación).
@@ -69,7 +71,7 @@ Aplica a:
 
 ## 4. Qué es PageSpeed Insights
 
-PSI analiza una URL y genera un reporte combinando dos tipos de mediciones:
+PageSpeed Insights evalúa el rendimiento de una página web a partir de su dirección en internet y genera un reporte que muestra qué tan rápido carga, qué tan estable es y cómo se comporta para los usuarios, combinando dos tipos de mediciones:
 
 ### 4.1 Datos de campo (Field Data / CrUX)
 
@@ -144,7 +146,7 @@ Tiempo hasta que se renderiza el elemento principal visible (el “contenido má
 ### 7.2 INP – Interaction to Next Paint
 
 **Qué mide**  
-Latencia de respuesta ante interacciones del usuario (clic, tap o teclado): desde la interacción hasta el siguiente pintado.
+Evalúa el tiempo que transcurre desde que el usuario realiza una interacción (clic, toque o uso del teclado) hasta que la interfaz puede mostrar visualmente la respuesta a dicha acción.
 
 **Umbrales**
 - Bueno: ≤ 200 ms  
@@ -157,7 +159,8 @@ Latencia de respuesta ante interacciones del usuario (clic, tap o teclado): desd
 ### 7.3 CLS – Cumulative Layout Shift
 
 **Qué mide**  
-Estabilidad visual: cuantifica movimientos inesperados de layout. *(El CLS es un valor sin unidades.)*
+Evalúa la estabilidad visual de la página, cuantificando los movimientos inesperados de los elementos durante la carga o la interacción. El CLS se expresa como un valor numérico sin unidades, que representa el grado de inestabilidad visual percibida por el usuario.
+
 
 **Umbrales**
 - Bueno: ≤ 0.1  
